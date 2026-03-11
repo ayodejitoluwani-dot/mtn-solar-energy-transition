@@ -36,4 +36,4 @@ the financial and environmental case for solar conversion.
 ## Author
 **Ayodeji Toluwani**  
 AI / Data Intern — NCAIR  
-[[[LinkedIn](https://www.linkedin.com/in/toluwani-ayodeji-657087269/)](https://www.linkedin.com/feed/)](#) · ayodejitoluwani@gmail.com
+[[[LinkedIn](https://www.linkedin.com/in/toluwani-ayodeji-657087269/)]· ayodejitoluwani@gmail.com
