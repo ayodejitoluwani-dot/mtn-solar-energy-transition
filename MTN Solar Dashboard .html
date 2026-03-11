@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MTN Nigeria — Solar Transition Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #F0F4F8; color: #1A1A1A; }
+
+  .header {
+    background: linear-gradient(135deg, #1F4E79 0%, #2E75B6 100%);
+    color: white; padding: 28px 40px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+  .header p  { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+  .badge { background: #F4A21E; color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; padding: 24px 40px 8px; }
+  .kpi {
+    background: white; border-radius: 12px; padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07); text-align: center;
+    border-top: 4px solid #2E75B6;
+  }
+  .kpi.red   { border-top-color: #C0392B; }
+  .kpi.green { border-top-color: #27AE60; }
+  .kpi.gold  { border-top-color: #F4A21E; }
+  .kpi-val   { font-size: 26px; font-weight: 800; color: #1F4E79; margin-bottom: 4px; }
+  .kpi.red   .kpi-val { color: #C0392B; }
+  .kpi.green .kpi-val { color: #27AE60; }
+  .kpi.gold  .kpi-val { color: #E67E22; }
+  .kpi-label { font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 16px 40px; }
+  .charts-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; padding: 0 40px 16px; }
+  .card {
+    background: white; border-radius: 12px; padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .card h3 { font-size: 13px; color: #1F4E79; font-weight: 700; text-transform: uppercase;
+             letter-spacing: 0.5px; margin-bottom: 16px; padding-bottom: 8px;
+             border-bottom: 2px solid #EBF3FB; }
+  .chart-wrap { position: relative; height: 220px; }
+  .chart-wrap-lg { position: relative; height: 260px; }
+
+  .phase-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .phase-table th { background: #1F4E79; color: white; padding: 10px 14px; text-align: left; }
+  .phase-table td { padding: 10px 14px; border-bottom: 1px solid #EEE; }
+  .phase-table tr:nth-child(even) td { background: #F7FAFD; }
+  .tag { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+  .tag.green { background: #E8F8EE; color: #27AE60; }
+  .tag.blue  { background: #EBF3FB; color: #2E75B6; }
+  .tag.gold  { background: #FEF9E7; color: #E67E22; }
+
+  .footer { text-align: center; padding: 20px; font-size: 12px; color: #999; }
+  .savings-bar { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 13px; }
+  .savings-bar-fill { height: 22px; border-radius: 4px; display: flex; align-items: center;
+                      padding: 0 10px; color: white; font-size: 11px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>MTN Nigeria — Solar Energy Transition Dashboard</h1>
+    <p>Data-driven analysis across 580 assets · 500 towers · 80 offices & facilities · March 2026</p>
+  </div>
+  <div class="badge">Prepared by Ayodeji Toluwani · NCAIR</div>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-row">
+  <div class="kpi red">
+    <div class="kpi-val">₦8.49B</div>
+    <div class="kpi-label">Annual Diesel Cost</div>
+  </div>
+  <div class="kpi green">
+    <div class="kpi-val">₦6.80B</div>
+    <div class="kpi-label">Annual Solar Saving</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-val">₦4.18B</div>
+    <div class="kpi-label">Solar Capex Required</div>
+  </div>
+  <div class="kpi gold">
+    <div class="kpi-val">&lt;1 Year</div>
+    <div class="kpi-label">Avg Payback Period</div>
+  </div>
+  <div class="kpi green">
+    <div class="kpi-val">₦63.8B</div>
+    <div class="kpi-label">10-Year Net Saving</div>
+  </div>
+</div>
+
+<!-- Row 1 charts -->
+<div class="charts-grid">
+  <div class="card">
+    <h3>Annual Diesel Cost vs Solar Saving</h3>
+    <div class="chart-wrap"><canvas id="costVsSaving"></canvas></div>
+  </div>
+  <div class="card">
+    <h3>10-Year Cumulative Cost Comparison</h3>
+    <div class="chart-wrap"><canvas id="tenYear"></canvas></div>
+  </div>
+</div>
+
+<!-- Row 2 charts -->
+<div class="charts-grid">
+  <div class="card">
+    <h3>Diesel Cost by State (Top 10)</h3>
+    <div class="chart-wrap-lg"><canvas id="stateChart"></canvas></div>
+  </div>
+  <div class="card">
+    <h3>Solar Irradiance by State (kWh/m²/day)</h3>
+    <div class="chart-wrap-lg"><canvas id="irradianceChart"></canvas></div>
+  </div>
+</div>
+
+<!-- Row 3 -->
+<div class="charts-grid-3">
+  <div class="card">
+    <h3>Cost Split by Asset Type</h3>
+    <div class="chart-wrap"><canvas id="assetSplit"></canvas></div>
+  </div>
+  <div class="card">
+    <h3>Saving Potential by Tower Type</h3>
+    <div class="chart-wrap"><canvas id="towerSaving"></canvas></div>
+  </div>
+  <div class="card">
+    <h3>CO₂ Reduction Impact</h3>
+    <div style="padding-top:10px">
+      <div style="font-size:13px;color:#555;margin-bottom:12px">Annual emissions eliminated by solar transition:</div>
+      <div class="savings-bar">
+        <div style="width:80px;font-size:12px;color:#777">Diesel now</div>
+        <div class="savings-bar-fill" style="width:200px;background:#C0392B">18,961 tonnes CO₂</div>
+      </div>
+      <div class="savings-bar">
+        <div style="width:80px;font-size:12px;color:#777">After solar</div>
+        <div class="savings-bar-fill" style="width:40px;background:#27AE60">~3.8K</div>
+      </div>
+      <div style="margin-top:16px;font-size:13px;color:#1F4E79;font-weight:700">≈ 15,200 tonnes CO₂ eliminated per year</div>
+      <div style="font-size:12px;color:#777;margin-top:6px">Equivalent to removing ~3,300 cars from Nigerian roads annually</div>
+      <div style="margin-top:20px;padding:14px;background:#F0FFF4;border-radius:8px;font-size:12px;color:#27AE60;font-weight:600">
+        ✅ Supports MTN&#x2019;s ESG reporting obligations<br/>
+        ✅ Strengthens international investor confidence<br/>
+        ✅ Aligns with Nigeria&#x2019;s net-zero 2060 commitment
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Phased Rollout Table -->
+<div style="padding: 0 40px 16px;">
+  <div class="card">
+    <h3>Recommended Phased Rollout Plan</h3>
+    <table class="phase-table">
+      <thead>
+        <tr><th>Phase</th><th>Timeline</th><th>Focus</th><th>Assets</th><th>Capex</th><th>Annual Saving</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Phase 1</strong></td>
+          <td>Year 1</td>
+          <td>High-saving towers + key offices (all states)</td>
+          <td>170 assets</td>
+          <td>₦1.1B</td>
+          <td>₦2.1B/yr</td>
+          <td><span class="tag green">Quick Win</span></td>
+        </tr>
+        <tr>
+          <td><strong>Phase 2</strong></td>
+          <td>Years 2–3</td>
+          <td>Full northern portfolio (Sokoto, Katsina, Borno, Kaduna, Kano)</td>
+          <td>220 assets</td>
+          <td>₦1.8B</td>
+          <td>₦2.8B/yr</td>
+          <td><span class="tag blue">Scale-Up</span></td>
+        </tr>
+        <tr>
+          <td><strong>Phase 3</strong></td>
+          <td>Years 4–5</td>
+          <td>Southern states + remaining retail assets</td>
+          <td>190 assets</td>
+          <td>₦1.28B</td>
+          <td>₦1.9B/yr</td>
+          <td><span class="tag gold">Full Transition</span></td>
+        </tr>
+        <tr style="background:#F0FFF4">
+          <td><strong>Total</strong></td>
+          <td>5 Years</td>
+          <td>Complete portfolio solar conversion</td>
+          <td><strong>580 assets</strong></td>
+          <td><strong>₦4.18B</strong></td>
+          <td><strong>₦6.80B/yr</strong></td>
+          <td><span class="tag green">₦63.8B saved over 10 yrs</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="footer">Ayodeji Toluwani · AI/Data Intern, NCAIR · ayodejitoluwani@gmail.com · March 2026</div>
+
+<script>
+const BLUE='#1F4E79', LIGHT='#2E75B6', GREEN='#27AE60', RED='#C0392B', GOLD='#F4A21E', ORANGE='#E67E22';
+
+// Cost vs Saving
+new Chart(document.getElementById('costVsSaving'), { type:'bar',
+  data:{ labels:['Annual Diesel Cost','Potential Solar Saving','Residual Cost After Solar'],
+    datasets:[{ data:[8.49,6.80,1.69], backgroundColor:[RED,GREEN,ORANGE],
+      borderColor:'white', borderWidth:2, borderRadius:6 }]},
+  options:{ plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>`₦${v}B`}}}}
+});
+
+// 10-year
+const yrs=[0,1,2,3,4,5,6,7,8,9,10];
+new Chart(document.getElementById('tenYear'), { type:'line',
+  data:{ labels:yrs,
+    datasets:[
+      { label:'Do Nothing (Diesel)', data:yrs.map(y=>+(8.49*y).toFixed(1)),
+        borderColor:RED, backgroundColor:'rgba(192,57,43,0.08)', fill:true, tension:0.3, pointRadius:4 },
+      { label:'Solar Transition', data:yrs.map(y=>+(4.18+(8.49-6.80)*y).toFixed(1)),
+        borderColor:GREEN, backgroundColor:'rgba(39,174,96,0.08)', fill:true, tension:0.3, pointRadius:4 },
+    ]},
+  options:{ plugins:{legend:{position:'bottom'}},
+    scales:{y:{ticks:{callback:v=>`₦${v}B`},title:{display:true,text:'Cumulative Cost (₦B)'}}}}
+});
+
+// State diesel
+const states=['Lagos','Kano','Rivers','Abuja','Oyo','Delta','Kaduna','Enugu','Ogun','Imo'];
+const stateCosts=[1.21,1.08,0.97,0.89,0.78,0.72,0.68,0.61,0.58,0.52];
+new Chart(document.getElementById('stateChart'), { type:'bar',
+  data:{ labels:states,
+    datasets:[{ data:stateCosts, backgroundColor:stateCosts.map(v=>v===Math.max(...stateCosts)?RED:LIGHT),
+      borderRadius:4, borderColor:'white', borderWidth:1.5 }]},
+  options:{ indexAxis:'y', plugins:{legend:{display:false}},
+    scales:{x:{ticks:{callback:v=>`₦${v}B`}}}}
+});
+
+// Irradiance
+const irrStates=['Sokoto','Borno','Katsina','Kano','Kaduna','Abuja','Kwara','Oyo','Enugu','Lagos','Rivers','Delta'];
+const irrVals=[6.8,6.5,6.3,6.2,6.0,5.5,5.4,5.1,5.2,4.8,4.6,4.7];
+new Chart(document.getElementById('irradianceChart'), { type:'bar',
+  data:{ labels:irrStates,
+    datasets:[{ data:irrVals,
+      backgroundColor:irrVals.map(v=>v>=6.0?GREEN:v>=5.5?LIGHT:GOLD),
+      borderRadius:4, borderColor:'white', borderWidth:1.5 }]},
+  options:{ indexAxis:'y', plugins:{legend:{display:false}},
+    scales:{x:{min:4,title:{display:true,text:'kWh/m²/day'}}}}
+});
+
+// Asset split donut
+new Chart(document.getElementById('assetSplit'), { type:'doughnut',
+  data:{ labels:['Cell Towers (500)','Offices & Facilities (80)'],
+    datasets:[{ data:[78,22], backgroundColor:[BLUE,GOLD],
+      borderColor:'white', borderWidth:3, hoverOffset:6 }]},
+  options:{ plugins:{legend:{position:'bottom'}}, cutout:'60%' }
+});
+
+// Tower saving
+new Chart(document.getElementById('towerSaving'), { type:'bar',
+  data:{ labels:['Macro Tower','Micro Tower','Small Cell'],
+    datasets:[
+      { label:'Annual Diesel Cost', data:[19.8,9.7,4.4], backgroundColor:RED, borderRadius:4 },
+      { label:'Annual Solar Saving', data:[15.9,7.7,3.5], backgroundColor:GREEN, borderRadius:4 },
+    ]},
+  options:{ plugins:{legend:{position:'bottom'}},
+    scales:{y:{ticks:{callback:v=>`₦${v}M`}}}}
+});
+</script>
+</body>
+</html>
